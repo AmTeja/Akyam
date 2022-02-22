@@ -4,6 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
+  flutter_secure_storage_windows
+  hotkey_manager
+  system_tray
+  window_manager
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

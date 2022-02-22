@@ -1,11 +1,13 @@
 import 'dart:convert';
-
+import 'dart:developer';
 import 'package:akyam/models/user.dart';
 import 'package:akyam/services/database.dart';
 import 'package:akyam/services/server_response.dart';
 import 'package:akyam/services/validator.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
+
 import 'homepage.dart';
 
 class AuthPage extends StatefulWidget {
@@ -123,16 +125,24 @@ class _AuthPage extends State<AuthPage> {
                         });
                         try {
                           await Auth.login(emailTEC.text, passwordTEC.text)
-                              .then((ServerResponse sr) {
+                              .then((ServerResponse sr) async {
                             if (sr.type ==
                                 ServerResponseType.serverResponseSuccess) {
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: ((context) =>
-                                          Homepage(user: sr.data as User))));
+                              await windowManager.hide().then((value) async {
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: ((context) =>
+                                            Homepage(user: sr.data as User))));
+                                await windowManager.setResizable(true);
+                                await windowManager.setSize(Size(1280, 720));
+                                await windowManager.center();
+                                await windowManager.show();
+                              });
+                              // await windowManager.setSize(const Size(400, 600));
+                              // await windowManager.center();
+                              // await windowManager.show();
                             } else {
-                              print(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(
@@ -141,7 +151,7 @@ class _AuthPage extends State<AuthPage> {
                             }
                           });
                         } catch (_, e) {
-                          print(e);
+                          log(e.toString());
                           setState(() {
                             pressed = false;
                           });
@@ -278,21 +288,12 @@ class _AuthPage extends State<AuthPage> {
                               email: emailTEC.text,
                               password: passwordTEC.text)
                           .then((ServerResponse sr) {
-                        if (sr.type ==
-                            ServerResponseType.serverResponseSuccess) {
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: ((context) =>
-                                      Homepage(user: sr.data as User))));
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text((jsonDecode(sr.data.toString())
-                                  as Map)["msg"])));
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text((jsonDecode(sr.data.toString())
+                                as Map)["msg"])));
                       });
                     } catch (_, e) {
-                      print(e);
+                      log(e.toString());
                       setState(() {
                         pressed = false;
                       });

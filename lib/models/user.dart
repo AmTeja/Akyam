@@ -7,19 +7,20 @@ class User {
   final List<String> followers;
   final List<String> following;
   final bool isAdmin;
+  final String authToken;
 
-  User({
-    required this.username,
-    required this.id,
-    required this.email,
-    required this.profileUrl,
-    required this.coverUrl,
-    required this.followers,
-    required this.following,
-    required this.isAdmin,
-  });
+  User(
+      {required this.username,
+      required this.id,
+      required this.email,
+      required this.profileUrl,
+      required this.coverUrl,
+      required this.followers,
+      required this.following,
+      required this.isAdmin,
+      required this.authToken});
 
-  factory User.fromMap(Map json) => User(
+  factory User.fromMap(Map json, String authToken) => User(
       id: json["_id"].toString(),
       username: json["username"].toString(),
       email: json["email"].toString(),
@@ -33,5 +34,6 @@ class User {
           ? []
           : List.from(
               (json["following"] as List<dynamic>).map((e) => e.toString())),
-      isAdmin: json["isAdmin"] ?? false);
+      isAdmin: json["isAdmin"] ?? false,
+      authToken: authToken);
 }
