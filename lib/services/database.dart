@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
-
-import 'package:akyam/main.dart';
+import 'package:akyam/models/post.dart';
 import 'package:akyam/models/user.dart';
-import 'package:akyam/services/server_response.dart';
+import 'package:akyam/models/server_response.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -145,5 +144,45 @@ class Auth {
         type: ServerResponseType.serverResponseError,
         data: {"msg": "something has gone wrong!"},
         statusCode: 500);
+  }
+}
+
+class PostDB {
+  static Future<ServerResponse?> getPosts(
+      {required List<String> ids, required String auth_token}) async {
+    Uri url = Uri.parse("https://akyam.herokuapp.com/api/posts/feed");
+
+    Map<String, String> customHeaders = {
+      "content-type": "application/json",
+      'Authorization': 'Bearer $auth_token',
+    };
+
+    var body = jsonEncode({"ids": ids});
+
+    try {
+      var response = await http.post(url, headers: customHeaders, body: body);
+      if (response.statusCode == 200) {
+        List<Map> postsJson = List.from(jsonDecode(response.body) as List);
+        List<Post> posts = [];
+        for (Map postJson in postsJson) {
+          posts.add(Post.fromMap(postJson));
+        }
+        return ServerResponse(
+            type: ServerResponseType.serverResponseSuccess,
+            data: posts,
+            statusCode: response.statusCode);
+      } else if (response.statusCode == 401 ||
+          response.statusCode == 400 ||
+          response.statusCode == 403) {
+        return ServerResponse(
+            type: ServerResponseType.serverResponseError,
+            data: {response.body},
+            statusCode: response.statusCode);
+      }
+    } catch (e) {
+      log("Post Feed" + e.toString());
+    }
+
+    return null;
   }
 }

@@ -8,17 +8,8 @@ class AkyamTitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WindowTitleBarBox(
-      child: Row(children: [
-        Expanded(
-            child: MoveWindow(
-                // child: Center(
-                //     child: Text(
-                //   title ?? "Aksyam",
-                //   style: const TextStyle(color: Colors.white),
-                // )),
-                )),
-        const WindowButtons()
-      ]),
+      child:
+          Row(children: [Expanded(child: MoveWindow()), const WindowButtons()]),
     );
   }
 }

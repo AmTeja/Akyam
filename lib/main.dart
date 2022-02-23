@@ -1,11 +1,10 @@
 import 'dart:developer';
-
 import 'package:akyam/services/database.dart';
+import 'package:akyam/models/server_response.dart';
 import 'package:akyam/views/authpage.dart';
 import 'package:akyam/views/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 import 'models/user.dart';
@@ -15,21 +14,47 @@ bool hasToken = false;
 String? authToken = "";
 String? refreshToken = "";
 User? user;
+Widget page = const AuthPage();
+FlutterSecureStorage? storage;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Must add this line.
   await windowManager.ensureInitialized();
 
-  // Use it only after calling `hiddenWindowAtLaunch`
+  _systemTray = SystemTray();
+  await initSystemTray();
+
+  storage = const FlutterSecureStorage();
+
+  await getPage();
+
   windowManager.waitUntilReadyToShow().then((_) async {
-    // Hide window title bar
     await windowManager.setTitleBarStyle('hidden');
-    await windowManager.setSize(Size(800, 600));
+    await windowManager.setSize(const Size(1280, 720));
+    await windowManager.setResizable(false);
     await windowManager.center();
     await windowManager.show();
     await windowManager.setSkipTaskbar(false);
   });
+
   runApp(const MyApp());
+}
+
+Future<void> getPage() async {
+  try {
+    authToken = await storage!.read(key: 'authToken');
+    refreshToken = await storage!.read(key: 'refresh_token');
+
+    if (authToken != null && refreshToken != null) {
+      Auth.verify(authToken: authToken!, refreshToken: refreshToken!)
+          .then((ServerResponse serverResponse) {
+        page = Homepage(user: serverResponse.data as User);
+      });
+    } else {
+      page = const AuthPage();
+    }
+  } catch (e, _) {
+    log(_.toString());
+  }
 }
 
 Future<void> initSystemTray() async {
@@ -42,10 +67,8 @@ Future<void> initSystemTray() async {
   ];
 
   // We first init the systray menu and then add the menu entries
-  await _systemTray!.initSystemTray(
-    title: "Akyam",
-    iconPath: path,
-  );
+  await _systemTray!
+      .initSystemTray(title: "Akyam", iconPath: path, toolTip: "Runnin Akyam");
 
   await _systemTray!.setContextMenu(menu);
 
@@ -74,7 +97,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.white,
           iconTheme: const IconThemeData(size: 24)),
       themeMode: ThemeMode.dark,
-      home: AuthPage(),
+      home: page,
     );
   }
 }

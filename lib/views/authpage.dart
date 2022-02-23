@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:akyam/models/user.dart';
 import 'package:akyam/services/database.dart';
-import 'package:akyam/services/server_response.dart';
+import 'package:akyam/models/server_response.dart';
 import 'package:akyam/services/validator.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +66,45 @@ class _AuthPage extends State<AuthPage> {
     );
   }
 
+  handleLogin() async {
+    if (formKey.currentState!.validate()) {
+      setState(() {
+        pressed = true;
+      });
+      try {
+        await Auth.login(emailTEC.text, passwordTEC.text)
+            .then((ServerResponse sr) async {
+          if (sr.type == ServerResponseType.serverResponseSuccess) {
+            await windowManager.hide().then((value) async {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: ((context) => Homepage(user: sr.data as User))));
+              await windowManager.setResizable(true);
+              await windowManager.setSize(const Size(1280, 720));
+              await windowManager.center();
+              await windowManager.show();
+            });
+            // await windowManager.setSize(const Size(400, 600));
+            // await windowManager.center();
+            // await windowManager.show();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text((jsonDecode(sr.data.toString()) as Map)["msg"])));
+          }
+        });
+      } catch (_, e) {
+        log(e.toString());
+        setState(() {
+          pressed = false;
+        });
+      }
+    }
+    setState(() {
+      pressed = false;
+    });
+  }
+
   getLogin() {
     return Form(
       key: formKey,
@@ -99,6 +138,7 @@ class _AuthPage extends State<AuthPage> {
               controller: passwordTEC,
               obscureText: true,
               validator: (val) => Validators.password(val),
+              onFieldSubmitted: (val) => handleLogin(),
               style: const TextStyle(color: Colors.white, fontSize: 16),
               decoration: InputDecoration(
                   enabledBorder: OutlineInputBorder(
@@ -116,51 +156,7 @@ class _AuthPage extends State<AuthPage> {
                   borderRadius: BorderRadius.circular(21)),
               minWidth: double.infinity,
               color: const Color(0xFF6930C3),
-              onPressed: pressed
-                  ? null
-                  : () async {
-                      if (formKey.currentState!.validate()) {
-                        setState(() {
-                          pressed = true;
-                        });
-                        try {
-                          await Auth.login(emailTEC.text, passwordTEC.text)
-                              .then((ServerResponse sr) async {
-                            if (sr.type ==
-                                ServerResponseType.serverResponseSuccess) {
-                              await windowManager.hide().then((value) async {
-                                Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: ((context) =>
-                                            Homepage(user: sr.data as User))));
-                                await windowManager.setResizable(true);
-                                await windowManager.setSize(Size(1280, 720));
-                                await windowManager.center();
-                                await windowManager.show();
-                              });
-                              // await windowManager.setSize(const Size(400, 600));
-                              // await windowManager.center();
-                              // await windowManager.show();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          (jsonDecode(sr.data.toString())
-                                              as Map)["msg"])));
-                            }
-                          });
-                        } catch (_, e) {
-                          log(e.toString());
-                          setState(() {
-                            pressed = false;
-                          });
-                        }
-                      }
-                      setState(() {
-                        pressed = false;
-                      });
-                    },
+              onPressed: pressed ? null : () => handleLogin(),
               child: const Text(
                 "Login",
                 style: TextStyle(
