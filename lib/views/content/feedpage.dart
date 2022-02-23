@@ -1,10 +1,13 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
+import 'dart:math';
 
 import 'package:akyam/main.dart';
 import 'package:akyam/models/post.dart';
 import 'package:akyam/models/user.dart';
 import 'package:akyam/services/database.dart';
+import 'package:akyam/widgets/post.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:http/http.dart';
 
 class FeedPage extends StatefulWidget {
@@ -18,14 +21,27 @@ class FeedPage extends StatefulWidget {
 
 class _FeedPageState extends State<FeedPage> {
   bool isLoading = false;
-  ScrollController controller = ScrollController();
+  ScrollController scrollController = ScrollController();
+  double _extraScrollSpeed = 80;
   List<Post> posts = [];
 
   @override
   void initState() {
-    print(widget.user);
     setState(() {
       isLoading = true;
+    });
+    scrollController.addListener(() {
+      ScrollDirection scrollDirection =
+          scrollController.position.userScrollDirection;
+      if (scrollDirection != ScrollDirection.idle) {
+        double scrollEnd = scrollController.offset +
+            (scrollDirection == ScrollDirection.reverse
+                ? _extraScrollSpeed
+                : -_extraScrollSpeed);
+        scrollEnd = min(scrollController.position.maxScrollExtent,
+            max(scrollController.position.minScrollExtent, scrollEnd));
+        scrollController.jumpTo(scrollEnd);
+      }
     });
     setupPosts();
     super.initState();
@@ -38,12 +54,14 @@ class _FeedPageState extends State<FeedPage> {
         : Container(
             margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: ListView.separated(
-                controller: controller,
+                controller: scrollController,
                 shrinkWrap: true,
                 itemCount: posts.length,
                 // cacheExtent: 10,
                 separatorBuilder: (context, index) => const BuildSeperator(),
-                itemBuilder: (context, index) => BuildPost(post: posts[index])),
+                itemBuilder: (context, index) {
+                  return BuildPost(post: posts[index]);
+                }),
           );
   }
 
@@ -56,8 +74,8 @@ class _FeedPageState extends State<FeedPage> {
                   .data as List<dynamic>)
               .map((post) => post as Post));
     } catch (e, _) {
-      log(e.toString());
-      log(_.toString());
+      dev.log(e.toString());
+      dev.log(_.toString());
     } finally {
       setState(() {
         isLoading = false;
@@ -72,23 +90,7 @@ class BuildSeperator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 30,
-    );
-  }
-}
-
-class BuildPost extends StatelessWidget {
-  final Post post;
-
-  const BuildPost({Key? key, required this.post}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      height: 500,
-      color: Colors.blue,
-      child: Text(post.desc),
+      height: 70,
     );
   }
 }
