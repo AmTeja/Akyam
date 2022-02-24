@@ -52,6 +52,9 @@ class _FeedPageState extends State<FeedPage> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Container(
+            decoration: const BoxDecoration(
+                borderRadius:
+                    const BorderRadius.only(topLeft: Radius.circular(23))),
             margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
             child: ListView.separated(
                 controller: scrollController,

@@ -40,6 +40,8 @@ class _HomeSidebarState extends State<HomeSidebar> {
     ),
   ];
 
+  List<String> titles = const ["", "Home", "Social", "Settings"];
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -49,11 +51,11 @@ class _HomeSidebarState extends State<HomeSidebar> {
         Expanded(
           child: Container(
             decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(13))),
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(23))),
             child: PageView(
                 scrollDirection: Axis.vertical,
                 controller: pageController,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (index) {
                   setState(() {
                     this.index = index;
@@ -63,8 +65,8 @@ class _HomeSidebarState extends State<HomeSidebar> {
                   FeedPage(
                     user: widget.user,
                   ),
-                  ProfilePage(),
-                  SettingsPage()
+                  const ProfilePage(),
+                  const SettingsPage()
                 ]),
           ),
         )
@@ -81,13 +83,16 @@ class _HomeSidebarState extends State<HomeSidebar> {
           itemBuilder: (context, i) => InkWell(
                 onTap: () {
                   setState(() {
+                    if (i == 0) {
+                      expanded = true;
+                      return;
+                    }
                     if (i != 0) {
                       index = i - 1;
                       pageController.animateToPage(index,
                           duration: const Duration(milliseconds: 200),
                           curve: Curves.easeIn);
                     }
-                    ;
                   });
                 },
                 child: BuildCollapsedIcon(
@@ -97,16 +102,39 @@ class _HomeSidebarState extends State<HomeSidebar> {
   }
 
   getExpandedBar() {
-    return SizedBox(
-      width: 200,
-      child: ListView(
-        children: [
-          ListTile(
-            onTap: () {},
-            leading: const Icon(Icons.home),
-            title: const Text("Home"),
-          )
-        ],
+    return Container(
+      color: Colors.grey[800],
+      width: 150,
+      child: ListView.builder(
+        itemCount: sidebarIcons.length,
+        itemBuilder: (context, i) {
+          return InkWell(
+            onTap: () {
+              setState(() {
+                if (i == 0) {
+                  expanded = false;
+                  return;
+                }
+                if (i != 0) {
+                  index = i - 1;
+                  pageController.animateToPage(index,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeIn);
+                }
+              });
+            },
+            child: BuildExpandedTile(
+              icon: i == 0
+                  ? Icon(
+                      Icons.arrow_back_ios_new_outlined,
+                      color: Color(0xFF0e141a),
+                    )
+                  : sidebarIcons[i],
+              title: titles[i],
+              selected: i == index + 1,
+            ),
+          );
+        },
       ),
     );
   }
@@ -125,10 +153,34 @@ class BuildCollapsedIcon extends StatelessWidget {
       height: 40,
       width: 40,
       decoration: BoxDecoration(
-          color: selected ? Color(0xFF0e141a).withOpacity(0.3) : null,
+          color: selected ? const Color(0xFF0e141a).withOpacity(0.3) : null,
           borderRadius: BorderRadius.circular(13)),
       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
       child: icon,
+    );
+  }
+}
+
+class BuildExpandedTile extends StatelessWidget {
+  final bool selected;
+  final Icon icon;
+  final String title;
+
+  const BuildExpandedTile(
+      {Key? key,
+      required this.selected,
+      required this.icon,
+      required this.title})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      textColor: selected ? Colors.purple[700] : null,
+      leading: icon,
+      title: Text(
+        title,
+      ),
     );
   }
 }

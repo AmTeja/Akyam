@@ -2,6 +2,7 @@ import 'package:akyam/models/user.dart';
 import 'package:akyam/services/database.dart';
 import 'package:akyam/widgets/main_sidebar.dart';
 import 'package:akyam/widgets/titlebar.dart';
+import 'package:akyam/widgets/topbar.dart';
 import 'package:flutter/material.dart';
 
 class Homepage extends StatefulWidget {
@@ -19,10 +20,12 @@ class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF343A40),
+      // backgroundColor: const Color(0xFF343A40),
+      backgroundColor: Colors.grey[900],
       body: Column(
         children: [
           const AkyamTitleBar(),
+          TopBar(),
           Expanded(
             child: HomeSidebar(
               user: widget.user,
